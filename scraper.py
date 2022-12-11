@@ -15,6 +15,7 @@ from telethon.tl.types import ChannelParticipantsSearch
 from telethon.tl.functions.messages import GetHistoryRequest
 
 from calc import check_data
+from dbconnect import insert_posts
 
 class DateTimeEncoder(json.JSONEncoder):
 	'''Класс для сериализации записи дат в JSON'''
@@ -68,7 +69,7 @@ def run_scraper(name_channel: str):
 				break
 			messages = history.messages
 			for message in messages:
-				check = check_data(message.date)
+				check = check_data(message.date, name_channel)
 				if (check):
 					all_messages.append(message.to_dict())
 				else: 
@@ -77,10 +78,12 @@ def run_scraper(name_channel: str):
 			total_messages = len(all_messages)
 			if total_count_limit != 0 and total_messages >= total_count_limit or not check:
 				break
+		
+		insert_posts(all_messages, name_channel)
+		print(f'Записанно {len(all_messages)} постов из канала {name_channel}')
 
-		with open('channel_messages.json', 'w', encoding='utf8') as outfile:
-			json.dump(all_messages, outfile, ensure_ascii=False, cls=DateTimeEncoder)
-			print(f'Записанно {len(all_messages)} постов из канала {name_channel}')
+		#with open('channel_messages.json', 'w', encoding='utf8') as outfile:
+		#	json.dump(all_messages, outfile, ensure_ascii=False, cls=DateTimeEncoder)
 
 
 	async def scraper():
