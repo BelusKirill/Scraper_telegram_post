@@ -14,10 +14,11 @@ from telethon.tl.types import ChannelParticipantsSearch
 # класс для работы с сообщениями
 from telethon.tl.functions.messages import GetHistoryRequest
 
+from calc import check_data
 
 # Считываем учетные данные
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read("data.ini")
 
 # Присваиваем значения внутренним переменным
 api_id   = config['Telegram']['api_id']
@@ -55,20 +56,25 @@ async def dump_all_messages(channel):
 			return json.JSONEncoder.default(self, o)
 
 	while True:
+		check = True
 		history = await client(GetHistoryRequest(
 			peer=channel,
 			offset_id=offset_msg,
 			offset_date=None, add_offset=0,
-			limit=limit_msg, max_id=0, min_id=0,
+			limit=5, max_id=0, min_id=0,
 			hash=0))
 		if not history.messages:
 			break
 		messages = history.messages
 		for message in messages:
-			all_messages.append(message.to_dict())
+			check = check_data(message.date)
+			if (check):
+				all_messages.append(message.to_dict())
+			else: 
+				break
 		offset_msg = messages[len(messages) - 1].id
 		total_messages = len(all_messages)
-		if total_count_limit != 0 and total_messages >= total_count_limit:
+		if total_count_limit != 0 and total_messages >= total_count_limit or not check:
 			break
 
 	with open('channel_messages.json', 'w', encoding='utf8') as outfile:
@@ -76,9 +82,12 @@ async def dump_all_messages(channel):
 
 
 async def main():
-	url = input("Введите ссылку на канал или чат: ")
-	channel = await client.get_entity(url)
-	await dump_all_messages(channel)
+	try:
+		url = input("Введите ссылку на канал или чат: ")
+		channel = await client.get_entity(url)
+		await dump_all_messages(channel)
+	except Exception as ex:
+		print(ex)
 
 
 with client:
