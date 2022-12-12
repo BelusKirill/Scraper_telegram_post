@@ -82,7 +82,6 @@ def insert_posts(array: list, name_channel: str):
             cursor.execute(sql)
             sqliteConnection.commit()
 
-
         sql = f"UPDATE history_appeals \
         SET date='{datetime.now().astimezone(tz)}' \
         WHERE channel='{name_channel}';"

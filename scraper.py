@@ -79,7 +79,8 @@ def run_scraper(name_channel: str):
 			if total_count_limit != 0 and total_messages >= total_count_limit or not check:
 				break
 		
-		insert_posts(all_messages, name_channel)
+		if len(all_messages) > 0:
+			insert_posts(all_messages, name_channel)
 		print(f'Записанно {len(all_messages)} постов из канала {name_channel}')
 
 		#with open('channel_messages.json', 'w', encoding='utf8') as outfile:

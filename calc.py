@@ -34,9 +34,11 @@ def check_data(date: datetime, name_channel: str) -> bool:
 
 def checking_uniqueness(channels: list, names_channel: list):
     for i in range(0, len(names_channel) - 1, 1):
+        if channels[i] == None: continue
         for channel in channels[i]:
             if channel[1] == '': continue
-            for j in range(i+1, len(names_channel), 1): 
+            for j in range(i+1, len(names_channel), 1):
+                if channels[j] == None: continue
                 for channel2 in channels[j]:
                     res = similarity(channel[1], channel2[1])
                     if res > 0.1:
