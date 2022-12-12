@@ -10,8 +10,8 @@ import time
 tz = get_localzone()
 
 def similarity(s1, s2):
-    normalized1 = s1
-    normalized2 = s2
+    normalized1 = s1.lower()
+    normalized2 = s2.lower()
     matcher = difflib.SequenceMatcher(None, normalized1, normalized2)
     return matcher.ratio()
 
@@ -33,13 +33,32 @@ def check_data(date: datetime, name_channel: str) -> bool:
     return cdate.timestamp() < dt.timestamp()
 
 def checking_uniqueness(channels: list, names_channel: list):
-    for i in range(0, len(names_channel) - 1, 1):
+    groups = []
+    conver_typle_to_list(channels)
+
+    for i in range(0, len(names_channel), 1):
         if channels[i] == None: continue
         for channel in channels[i]:
-            if channel[1] == '': continue
+            group = []
+            group.append(channel[0])
+
+            if channel[1] == '' or channel[2] == 't': continue
             for j in range(i+1, len(names_channel), 1):
                 if channels[j] == None: continue
                 for channel2 in channels[j]:
+                    if channel2[2] == 't': continue
                     res = similarity(channel[1], channel2[1])
-                    if res > 0.1:
-                        print(res, '|'+channel[1]+"|", "|"+channel2[1]+"|")
+                    if res > 0.35:
+                        #print(res, '|'+channel[1]+"|", "|"+channel2[1]+"|")
+                        print(res, channel[0], channel2[0])
+                        channel2[2] = 't'
+                        group.append(channel2[0])
+            channel[2] == 't'
+            groups.append(group)
+
+    print(groups)
+
+def conver_typle_to_list(channels: list):
+    for i in range(len(channels)):
+        for j in range(len(channels[i])):
+            channels[i][j] = list(channels[i][j])

@@ -9,8 +9,8 @@ with open("channel_list.txt", "r") as file:
     for line in file:
         try:
             name_channel = line.replace('\n','')
-            run_scraper(name_channel)
-            channels.append(get_data(f"SELECT id, text FROM posts WHERE channel = '{name_channel}' and verified = 'f'"))
+            #run_scraper(name_channel)
+            channels.append(get_data(f"SELECT id, text, verified FROM posts WHERE channel = '{name_channel}' and verified = 'f'"))
             names_channel.append(name_channel)
         except Exception as ex:
             print(ex)
