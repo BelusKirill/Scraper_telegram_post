@@ -2,6 +2,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from tzlocal import get_localzone #pip install tzlocal /для часового пояса
 from dbconnect import get_data_line
+from check_plagiat import PlagiarismChecker
 
 import difflib
 import time
@@ -9,11 +10,13 @@ import time
 # получаем текущий часовой пояс
 tz = get_localzone()
 
+
 def similarity(s1, s2):
     normalized1 = s1.lower()
     normalized2 = s2.lower()
     matcher = difflib.SequenceMatcher(None, normalized1, normalized2)
     return matcher.ratio()
+
 
 def check_data(date: datetime, name_channel: str) -> bool:
     cdate: datetime = None
@@ -32,6 +35,7 @@ def check_data(date: datetime, name_channel: str) -> bool:
 
     return cdate.timestamp() < dt.timestamp()
 
+
 def checking_uniqueness(channels: list, names_channel: list):
     groups = []
     conver_typle_to_list(channels)
@@ -46,9 +50,12 @@ def checking_uniqueness(channels: list, names_channel: list):
             for j in range(i+1, len(names_channel), 1):
                 if channels[j] == None: continue
                 for channel2 in channels[j]:
-                    if channel2[2] == 't': continue
-                    res = similarity(channel[1], channel2[1])
-                    if res > 0.35:
+                    if channel2[1] == '' or channel2[2] == 't': continue
+                    #проверка уникальности
+                    checker = PlagiarismChecker(channel[1], channel2[1])
+                    res = checker.get_rate()
+                    #res = similarity(channel[1], channel2[1]) #быстроя проверка
+                    if res > 15:
                         #print(res, '|'+channel[1]+"|", "|"+channel2[1]+"|")
                         print(res, channel[0], channel2[0])
                         channel2[2] = 't'
@@ -56,7 +63,8 @@ def checking_uniqueness(channels: list, names_channel: list):
             channel[2] == 't'
             groups.append(group)
 
-    print(groups)
+    return groups
+
 
 def conver_typle_to_list(channels: list):
     for i in range(len(channels)):

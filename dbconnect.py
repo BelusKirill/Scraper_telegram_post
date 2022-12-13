@@ -55,7 +55,6 @@ def insert(sql: str):
     try:
         sqliteConnection = sqlite3.connect('db/database.sqlite')
         cursor = sqliteConnection.cursor()
-        print("Сосданно соединение с SQLite")
 
         cursor.execute(sql)
         sqliteConnection.commit()
@@ -66,7 +65,31 @@ def insert(sql: str):
     finally:
         if sqliteConnection:
             sqliteConnection.close()
-            print("SQLite соединение закрыто")
+
+
+def insert_get_id(sql: str):
+    record = None
+    try:
+        sqliteConnection = sqlite3.connect('db/database.sqlite')
+        cursor = sqliteConnection.cursor()
+
+        cursor.execute(sql)
+        sqliteConnection.commit()
+
+        cursor.execute("SELECT last_insert_rowid()")
+        record = cursor.fetchall()
+
+        cursor.close()
+
+    except sqlite3.Error as error:
+        print("Ошибка при работе с sqlite", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+        if record != None and len(record) > 0:
+            return record[0][0]
+        else:
+            return None
 
 
 def insert_posts(array: list, name_channel: str):

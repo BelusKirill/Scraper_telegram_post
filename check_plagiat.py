@@ -41,7 +41,7 @@ class PlagiarismChecker:
         a = hash_table["a"]
         b = hash_table["b"]
         sh = len(np.intersect1d(a, b))
-        print(sh, a, b)
+        #print(sh, a, b)
 
         # P = (2 * SH / THA * THB ) 100%
         p = (float(2 * sh)/(th_a + th_b)) * 100
@@ -69,10 +69,10 @@ class PlagiarismChecker:
         return filtered_content
 
 
-current_dir = dirname(__file__)
-checker = PlagiarismChecker(
-    'join(current_dir, "./document_a.txt")',
-    'join(current_dir, "./document_b.txt")'
-)
-print('The percentage of plagiarism held by both documents is  {0}%'.format(
-    checker.get_rate()))
+#current_dir = dirname(__file__)
+#checker = PlagiarismChecker(
+#    'join(current_dir, "./document_a.txt")',
+#    'join(current_dir, "./document_b.txt")'
+#)
+#print('The percentage of plagiarism held by both documents is  {0}%'.format(
+#    checker.get_rate()))
