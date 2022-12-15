@@ -45,8 +45,6 @@ async def send_posts(dp: Dispatcher):
 
             if msg != None:
                 await dp.bot.send_message(config['Telegram_bot']['channel_id'], msg)
-                print(id[0][3])
-                await dp.bot.send_media_group(config['Telegram_bot']['channel_id'], media=str(id[0][3]))
             else: continue
 
             sql3 = f"UPDATE for_post SET sent = 't' WHERE id = {id[0]}"

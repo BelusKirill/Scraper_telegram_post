@@ -62,8 +62,6 @@ def start_schedule():
 
     schedule.every().day.at("21:30").do(generate_list_to_send)
 
-    schedule.every().day.at("21:08").do(generate_list_to_send)
-
     while True:
         schedule.run_pending()
         time.sleep(30)
