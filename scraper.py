@@ -1,101 +1,46 @@
 import configparser
-import json
+import asyncio
 
-from telethon.sync import TelegramClient
-from telethon import connection
+from dbconnect import insert_posts, insert
+from telethon import TelegramClient, events
+from tzlocal import get_localzone
 
-# для корректного переноса времени сообщений в json
-from datetime import date, datetime
+tz = get_localzone()
 
-# классы для работы с каналами
-from telethon.tl.functions.channels import GetParticipantsRequest
-from telethon.tl.types import ChannelParticipantsSearch
+def telegram_listening():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-# класс для работы с сообщениями
-from telethon.tl.functions.messages import GetHistoryRequest
+    config = configparser.ConfigParser()
+    config.read("data.ini")
 
-from calc import check_data
-from dbconnect import insert_posts
+    # Присваиваем значения внутренним переменным
+    api_id   = config['Telegram']['api_id']
+    api_hash = config['Telegram']['api_hash']
+    username = config['Telegram']['username']
+    channel_id = config['Telegram_bot']['channel_id']
 
-class DateTimeEncoder(json.JSONEncoder):
-	'''Класс для сериализации записи дат в JSON'''
-	def default(self, o):
-		if isinstance(o, datetime):
-			return o.isoformat()
-		if isinstance(o, bytes):
-			return list(o)
-		return json.JSONEncoder.default(self, o)
+    client = TelegramClient('session_read', api_id, api_hash)
 
-def run_scraper(name_channel: str):
-	# Считываем учетные данные
-	config = configparser.ConfigParser()
-	config.read("data.ini")
+    @client.on(events.NewMessage)
+    async def my_event_handler(event):
+        try:
+            if hasattr(event.message.to_id, 'channel_id'):
+                if (int(event.message.to_id.channel_id) == int(channel_id[4:])):
+                    print('Сообщение из своей группы', event.message.chat.username)
+                else:
+                    #insert_posts(all_messages, name_channel
+                    sql = "INSERT INTO posts (id_telegram_post, channel, media, text, date, verified) VALUES (?, ?, ?, ?, ?, 'f')"
+                    insert(sql, (event.message.id, 'https://t.me/{}'.format(event.message.chat.username), str(event.message.media), event.message.message, event.message.date.astimezone(tz), ))
+                    sql2 = "INSERT INTO posts_json (json, date) VALUES (?, ?)"
+                    insert(sql2, ('{}'.format(event.message), event.message.date.astimezone(tz), ))
+                    print('{}'.format(event.message))
+                    print(event.message.chat.username)
+            else:
+                print('Сообщение пользователя')
+                print(event.message.chat.username)
+        except Exception as ex:
+            print(ex)
 
-	# Присваиваем значения внутренним переменным
-	api_id   = config['Telegram']['api_id']
-	api_hash = config['Telegram']['api_hash']
-	username = config['Telegram']['username']
-
-	# Прокси
-	"""
-	proxy = (proxy_server, proxy_port, proxy_key)
-
-	client = TelegramClient(username, api_id, api_hash,
-		connection=connection.ConnectionTcpMTProxyRandomizedIntermediate,
-		proxy=proxy)
-	"""
-	client = TelegramClient(username, api_id, api_hash)
-
-	client.start()
-
-	async def dump_all_messages(channel):
-		"""Записывает json-файл с информацией о всех сообщениях канала/чата"""
-		offset_msg = 0    # номер записи, с которой начинается считывание
-		limit_msg = 100   # максимальное число записей, передаваемых за один раз
-
-		all_messages = []   # список всех сообщений
-		total_messages = 0
-		total_count_limit = 0  # поменяйте это значение, если вам нужны не все сообщения
-
-		while True:
-			check = True
-			history = await client(GetHistoryRequest(
-				peer=channel,
-				offset_id=offset_msg,
-				offset_date=None, add_offset=0,
-				limit=5, max_id=0, min_id=0,
-				hash=0))
-			if not history.messages:
-				break
-			messages = history.messages
-			for message in messages:
-				check = check_data(message.date, name_channel)
-				if (check):
-					all_messages.append(message.to_dict())
-				else: 
-					break
-			offset_msg = messages[len(messages) - 1].id
-			total_messages = len(all_messages)
-			if total_count_limit != 0 and total_messages >= total_count_limit or not check:
-				break
-		
-		if len(all_messages) > 0:
-			insert_posts(all_messages, name_channel)
-		print(f'Записанно {len(all_messages)} постов из канала {name_channel}')
-
-		#with open('channel_messages.json', 'w', encoding='utf8') as outfile:
-		#	json.dump(all_messages, outfile, ensure_ascii=False, cls=DateTimeEncoder)
-
-
-	async def scraper():
-		try:
-			#url = input("Введите ссылку на канал или чат: ")
-			print(f'Начало чтение постов из {name_channel}')
-			channel = await client.get_entity(name_channel)
-			await dump_all_messages(channel)
-		except Exception as ex:
-			print(ex)
-
-
-	with client:
-		client.loop.run_until_complete(scraper())
+    client.start()
+    client.run_until_disconnected()

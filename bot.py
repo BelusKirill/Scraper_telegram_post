@@ -20,7 +20,7 @@ async def generate_sources(array):
     msg = "\n\nИсточники:\n"
 
     for row in array:
-        sources.add(row[1])
+        sources.add(f'{row[2]}/{row[1]}')
 
     for item in sources:
         msg += item
@@ -39,16 +39,18 @@ async def send_posts(dp: Dispatcher):
             sql2 = f"SELECT b.* FROM channels a INNER JOIN posts b on a.id_for_post = {id[0]} and b.id = a.id_post ORDER BY b.date DESC"
             data2 = get_data(sql2)
             try:
-                msg = data2[0][3]
+                msg = data2[0][4]
             except: continue
             msg += await generate_sources(data2)
 
             if msg != None:
                 await dp.bot.send_message(config['Telegram_bot']['channel_id'], msg)
+                print(id[0][3])
+                await dp.bot.send_media_group(config['Telegram_bot']['channel_id'], media=str(id[0][3]))
             else: continue
 
             sql3 = f"UPDATE for_post SET sent = 't' WHERE id = {id[0]}"
-            insert(sql3)
+            insert(sql3, ())
     except Exception as ex:
         print(ex)
 
@@ -59,23 +61,7 @@ async def send_message_to_user(dp: Dispatcher):
 
     job_active = True
     try:
-        date = datetime.datetime.now()
-
-        if (date.time().hour == 9 and date.time().minute == 0):
-            print(date.time().hour, date.time().minute)
-            os.system("start cmd /k python main.py")
-            await send_posts(dp)
-        elif (date.time().hour == 14 and date.time().minute == 0):
-            print(date.time().hour, date.time().minute)
-            os.system("start cmd /k python main.py")
-            await send_posts(dp)
-        elif (date.time().hour == 21 and date.time().minute == 30):
-            print(date.time().hour, date.time().minute)
-            os.system("start cmd /k python main.py")
-            await send_posts(dp)
-        else:
-            print(date.time().hour, date.time().minute)
-            await send_posts(dp)
+        await send_posts(dp)
     except Exception as ex:
         print(ex)
     finally:
@@ -89,12 +75,6 @@ async def startup(dp: Dispatcher) -> None: # запускаем таски execu
     scheduler_jods()
     print('Starting bot {}'.format(datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")))
 
-def run_scraper():
-    print('test')
-
-if __name__ == '__main__':
-    thread = threading.Thread(target=run_scraper)
-    thread.start()
-
+def start_bot():
     scheduler.start()
     executor.start_polling(dp, on_startup=startup)

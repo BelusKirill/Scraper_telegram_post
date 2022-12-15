@@ -65,6 +65,22 @@ def insert(sql: str):
             sqliteConnection.close()
 
 
+def insert(sql: str, params):
+    try:
+        sqliteConnection = sqlite3.connect('db/database.sqlite')
+        cursor = sqliteConnection.cursor()
+
+        cursor.execute(sql, params)
+        sqliteConnection.commit()
+        cursor.close()
+
+    except sqlite3.Error as error:
+        print("Ошибка при работе с sqlite", error)
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+
+
 def insert_get_id(sql: str):
     record = None
     try:

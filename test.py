@@ -30,7 +30,7 @@ client = TelegramClient('session_read', api_id, api_hash)
 async def my_event_handler(event):
     if hasattr(event.message.to_id, 'channel_id'):
         if (event.message.to_id.channel_id == channel_id[4:]):
-            print('Соо')
+            print('Сообщение из своей группы')
         print('{}'.format(event.message))
     else:
         print('Сообщение пользователя')
