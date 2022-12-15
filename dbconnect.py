@@ -33,7 +33,6 @@ def get_data(sql: str) -> list:
     try:
         sqliteConnection = sqlite3.connect('db/database.sqlite')
         cursor = sqliteConnection.cursor()
-        print("Сосданно соединение с SQLite")
 
         cursor.execute(sql)
         record = cursor.fetchall()
@@ -44,7 +43,6 @@ def get_data(sql: str) -> list:
     finally:
         if sqliteConnection:
             sqliteConnection.close()
-            print("SQLite соединение закрыто")
         if record != None and len(record) > 0:
             return record
         else:
@@ -99,10 +97,9 @@ def insert_posts(array: list, name_channel: str):
         print("Сосданно соединение с SQLite")
 
         for line in array:
-            sql = f"INSERT INTO posts (channel, photos, text, date, verified) \
-                    VALUES ('{name_channel}', '{None}', '{line['message']}', '{line['date'].astimezone(tz)}', 'f')"
-            print(sql)
-            cursor.execute(sql)
+            sql = "INSERT INTO posts (channel, photos, text, date, verified) \
+                    VALUES (?, ?, ?, ?, 'f')"
+            cursor.execute(sql, (name_channel, None, line['message'], line['date'].astimezone(tz), ))
             sqliteConnection.commit()
 
         sql = f"UPDATE history_appeals \
